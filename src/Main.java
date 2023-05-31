@@ -1,5 +1,4 @@
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -10,6 +9,7 @@ public class Main {
     static ArrayList<player> players = new ArrayList<>(); // The players in the game
     static boolean winner = false; // Whether a player has won the game
     static int currentplayer = 0; // The current player
+    static int cardpicker = 0; // The player who pickes the green card
 
     public static void main(String[] args) {
         ArrayList<String> green = filereader.read(new File("C:\\Users\\jtjak\\IdeaProjects\\Apples to Apples\\src\\green.txt")); // The green cards
@@ -46,30 +46,31 @@ public class Main {
     }
 
     public static void deal(ArrayList<player> players, ArrayList<String> red) { // Deals the cards to the players
-        for (int i = 0; i < players.size(); i++) { // Loops through the players
+        for (player player : players) { // Loops through the players
             for (int j = 0; j < 5; j++) {  // Loops through the cards
                 int card = (int) (Math.random() * (red.size() - 1)); // Picks a random card
-                players.get(i).addCard(red.get(card)); // Adds the card to the player's hand
+                player.addCard(red.get(card)); // Adds the card to the player's hand
                 red.remove(card); // Removes the card from the deck
             }
         }
     }
 
     public static void turn(ArrayList<player> players, ArrayList<String> green, ArrayList<String> red) { // Runs a turn
-        String greencard = green.get((int) Math.random() * green.size()); // Picks a random green card
+        String greencard = green.get((int) (Math.random() * green.size())); // Picks a random green card
         ArrayList<String> played = new ArrayList<>(); // The cards that have been played
         for (int i = 0; i < players.size(); i++) { // Loops through the players
-            if (!(currentplayer == i)) {
-                if (!(players.get(currentplayer).isComputer())) {
-                    earlyturn(players, greencard, i);
+            if (!(cardpicker == i)) { // If the player is not the current player
+                System.out.println(currentplayer); // Prints the current player
+                if (!(players.get(currentplayer).isComputer())) { // If the player is not a computer
+                    earlyturn(players, greencard, i); // Runs the early turn
                     System.out.print("Which card would you like to play? (1-5)\n> "); // Asks for the card to play
                     Scanner input = new Scanner(System.in); // Creates a new scanner
                     int card = input.nextInt() - 1; // Reads the next int
-                    lateturn(players, red, played, i, card);
-                } else {
-                    earlyturn(players, greencard, i);
+                    lateturn(players, red, played, i, card); // Runs the late turn
+                } else { // If the player is a computer
+                    earlyturn(players, greencard, i); // Runs the early turn
                     int card = (players.get(i).pickcard()); // Picks a card for the computer
-                    lateturn(players, red, played, i, card);
+                    lateturn(players, red, played, i, card); // Runs the late turn
                 }
             }
         }
@@ -78,16 +79,21 @@ public class Main {
         for (int i = 0; i < played.size(); i++) { // Loops through the cards played
             System.out.println((i + 1) + ": " + played.get(i)); // Prints the card
         }
-        if (!(players.get(currentplayer).isComputer())) {
+        if (!(players.get(cardpicker).isComputer())) {
             System.out.print("Which card is the best? (1-5)\n> "); // Asks for the best card
             Scanner input = new Scanner(System.in); // Creates a new scanner
             int winner = input.nextInt() - 1; // Reads the next int
             players.get(winner).addgreen(); // Adds a green card to the winner
             System.out.println(players.get(winner).getName() + " won the round and has " + players.get(winner).getgreens() + " green cards!"); // Prints the winner
         } else {
-            int winner = players.get(currentplayer).pickwinner(played); // Picks a winner for the computer
+            int winner = players.get(cardpicker).pickwinner(played); // Picks a winner for the computer
             players.get(winner).addgreen(); // Adds a green card to the winner
             System.out.println(players.get(winner).getName() + " won the round and has " + players.get(winner).getgreens() + " green cards!"); // Prints the winner
+        }
+        if (cardpicker == players.size() - 1) { // If it is the last player's turn
+            cardpicker = 0; // Sets the current player to the first player
+        } else { // If it is not the last player's turn
+            cardpicker++; // Increments the current player
         }
     }
 
@@ -124,7 +130,7 @@ public class Main {
     }
 
     public static void draw (player p, ArrayList<String> red) { // Draws a new card
-        int index = (int) Math.random() * red.size(); // Picks a random card
+        int index = (int) (Math.random() * red.size()); // Picks a random card
         p.addCard(red.get(index)); // Adds the card to the player's hand
         red.remove(index); // Removes the card from the deck
     }
